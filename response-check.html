@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>반응속도</title>
+    <style>
+      #screen {
+        width: 300px;
+        height: 200px;
+        text-align: center;
+        user-select: none;
+      }
+      #screen.waiting {
+        background-color: aqua;
+      }
+      #screen.ready {
+        background-color: red;
+        color: white;
+      }
+      #screen.now {
+        background-color: greenyellow;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="screen" class="waiting">클릭해서 시작하세요</div>
+    <div id="result"></div>
+    <script>
+      const $screen = document.querySelector("#screen");
+      const $result = document.querySelector("#result");
+      let startTime;
+      let endTime;
+      const records = [];
+      let timeoutId;
+
+      $screen.addEventListener("click", (e) => {
+        if (e.target.classList.contains("waiting")) {
+          $screen.classList.remove("waiting");
+          $screen.classList.add("ready");
+          $screen.textContent = "초록색이 되면 클릭하세요";
+
+          timeoutId = setTimeout(() => {
+            $screen.classList.remove("ready");
+            $screen.classList.add("now");
+            $screen.textContent = "클릭하세요!";
+            startTime = new Date();
+          }, Math.floor(Math.random() * 1000 + 2000));
+        } else if (e.target.classList.contains("ready")) {
+          $screen.classList.replace("ready", "waiting");
+          $screen.textContent = "너무 성급하시군요!";
+          clearTimeout(timeoutId);
+        } else if (e.target.classList.contains("now")) {
+          endTime = new Date();
+          const timeDiff = endTime - startTime;
+          records.push(timeDiff);
+          const average = (
+            records.reduce((a, c) => a + c, 0) / records.length
+          ).toFixed(2);
+          $result.textContent = `현재: ${timeDiff}ms, 평균: ${average}ms`;
+          const fastRecords = records
+            .slice()
+            .sort((a, b) => a - b)
+            .slice(0, 5);
+          fastRecords.forEach((record, idx) => {
+            $result.append(
+              document.createElement("br"),
+              `${idx + 1}위 : ${record}ms`
+            );
+          });
+          startTime = null;
+          endTime = null;
+          $screen.classList.replace("now", "waiting");
+          $screen.textContent = "클릭해서 시작하세요";
+        }
+      });
+    </script>
+  </body>
+</html>

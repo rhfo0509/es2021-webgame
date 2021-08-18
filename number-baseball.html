@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>숫자야구</title>
+  </head>
+  <body>
+    <form id="form">
+      <input type="text" id="input" />
+      <button>확인</button>
+    </form>
+    <div id="logs"></div>
+    <script>
+      const $input = document.querySelector("#input");
+      const $form = document.querySelector("#form");
+      const $logs = document.querySelector("#logs");
+
+      // const numbers = [];
+      // for (let n = 0; n < 9; n++) {
+      //   numbers.push(n + 1); // numbers : 1 ~ 9
+      // }
+      const numbers = Array(9)
+        .fill()
+        .map((el, idx) => {
+          return idx + 1;
+        });
+
+      let out = 0; // out Count
+      const answer = [];
+      // do {
+      //   const index = Math.floor(Math.random() * 9);
+      //   if (numbers.includes(index + 1)) {
+      //     answer.push(numbers[index]); // answer : 0 ~ 8
+      //     numbers.splice(index, 1, "selected");
+      //     count++;
+      //   }
+      // } while (count <= 4);
+      for (let n = 0; n < 4; n++) {
+        const index = Math.floor(Math.random() * numbers.length);
+        answer.push(numbers[index]);
+        numbers.splice(index, 1);
+      }
+
+      console.log(answer);
+
+      // 입력한 값이 형식에 맞는가?
+      const tries = [];
+      function checkInput(input) {
+        if (input.length !== 4) {
+          return alert("4자리 숫자를 입력해 주세요.");
+        }
+        if (isNaN(input)) {
+          return alert("유효한 값을 입력해 주세요.");
+        }
+        if (tries.includes(input)) {
+          return alert("이미 시도한 값입니다.");
+        }
+        if (new Set(input).size !== 4) {
+          return alert("중복되지 않게 입력해 주세요.");
+        }
+
+        return true;
+      }
+
+      function defeated() {
+        $logs.appendChild(
+          document.createTextNode(`패배! 정답은 ${answer.join("")}`)
+        );
+      }
+
+      $form.addEventListener("submit", (e) => {
+        e.preventDefault(); // 기본 동작 막기
+        const value = e.target[0].value;
+        $input.value = "";
+        if (!checkInput(value)) {
+          return;
+        }
+
+        if (answer.join("") === value) {
+          $logs.textContent = "홈런!";
+          $input.disabled = true;
+          return;
+        }
+
+        if (tries.length >= 9) {
+          defeated();
+          $input.disabled = true;
+          return;
+        }
+
+        // 몇 스트라이크 / 몇 볼 / 몇 아웃인지 검사
+        let strike = 0;
+        let ball = 0;
+        // answer: 3146, value: 1236
+        // for (let i = 0; i < answer.length; i++) {
+        //   const index = value.indexOf(answer[i]);
+        //   if (index > -1) {
+        //     // 일치하는 숫자 발견
+        //     if (index === i) {
+        //       // 자릿수도 같으면 strike
+        //       strike += 1;
+        //     } else {
+        //       // 숫자면 같으면 ball
+        //       ball += 1;
+        //     }
+        //   }
+        // }
+
+        answer.forEach((element, i) => {
+          const index = value.indexOf(element);
+          if (index > -1) {
+            // 일치하는 숫자 발견
+            if (index === i) {
+              // 자릿수도 같으면 strike
+              strike += 1;
+            } else {
+              // 숫자면 같으면 ball
+              ball += 1;
+            }
+          }
+        });
+
+        if (strike || ball) {
+          $logs.append(
+            `${value}: ${strike} 스트라이크 ${ball} 볼`,
+            document.createElement("br")
+          );
+          tries.push(value);
+        } else {
+          $logs.append(`${value}: ${++out} 아웃`, document.createElement("br"));
+          tries.push(value);
+        }
+
+        if (out >= 3) {
+          defeated();
+          $input.disabled = true;
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>가위바위보</title>
+    <style>
+      #computer {
+        width: 142px;
+        height: 200px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="computer"></div>
+    <div>
+      <button id="scissors" class="btn">가위</button>
+      <button id="rock" class="btn">바위</button>
+      <button id="paper" class="btn">보</button>
+    </div>
+    <div id="score">0</div>
+    <script>
+      const $computer = document.querySelector("#computer");
+      const $score = document.querySelector("#score");
+      const $rock = document.querySelector("#rock");
+      const $scissors = document.querySelector("#scissors");
+      const $paper = document.querySelector("#paper");
+      const IMG_URL = "./rsp.png";
+      $computer.style.background = `url(${IMG_URL}) 0 0`;
+      $computer.style.backgroundSize = "auto 200px";
+
+      const rspX = {
+        scissors: "0",
+        rock: "-220px",
+        paper: "-440px",
+      };
+
+      let computerChoice = "scissors";
+      const changeComputerHand = () => {
+        if (computerChoice === "scissors") {
+          // 가위면
+          computerChoice = "rock";
+        } else if (computerChoice === "rock") {
+          // 바위면
+          computerChoice = "paper";
+        } else if (computerChoice === "paper") {
+          // 보면
+          computerChoice = "scissors";
+        }
+        $computer.style.background = `url(${IMG_URL}) ${rspX[computerChoice]} 0`;
+        $computer.style.backgroundSize = "auto 200px";
+      };
+      let intervalId = setInterval(changeComputerHand, 50);
+
+      const scoreTable = {
+        rock: 0,
+        scissors: 1,
+        paper: -1,
+      };
+
+      // clickButton 5번 연달아 호출, 인터벌 1번, 2번, 3번, 4번, 5번
+      // 인터벌 5번만 intervalId에 저장, 그다음에 버튼을 클릭하면 5번만 취소됨
+
+      // 1. setTimeout에 clearInterval(intervalId)
+      // 2. removeEventListener
+      // 3. clickable 변수 : flag 변수 - if 분기처리 (추천)
+      let clickable = true;
+      let me = 0;
+      let computer = 0;
+      const clickButton = () => {
+        if (clickable) {
+          clearInterval(intervalId);
+          clickable = false;
+
+          // 점수 계산 및 화면을 표시
+          const myChoice = event.target.id;
+          const myScore = scoreTable[myChoice];
+          const computerScore = scoreTable[computerChoice];
+          const diff = myScore - computerScore;
+          console.log(myChoice, computerChoice, myScore, computerScore, diff);
+
+          // if (diff === -1 || diff === 2) {
+          //   console.log("승리");
+          // } else if (diff === 1 || diff === -2) {
+          //   console.log("패배");
+          // } else {
+          //   console.log("무승부");
+          // }
+
+          let message;
+          if ([-1, 2].includes(diff)) {
+            me += 1;
+            message = "승리";
+          } else if ([1, -2].includes(diff)) {
+            computer += 1;
+            message = "패배";
+          } else {
+            message = "무승부";
+          }
+
+          $score.textContent = `${message}! 내 점수: ${me}점 컴퓨터 점수: ${computer}점`;
+
+          if (me >= 3) {
+            $score.append(document.createElement("br"), `나의 승리`);
+          } else if (computer >= 3) {
+            $score.append(document.createElement("br"), `컴퓨터의 승리`);
+          } else {
+            setTimeout(() => {
+              clickable = true;
+              intervalId = setInterval(changeComputerHand, 50);
+            }, 1000);
+          }
+        }
+      };
+
+      $rock.addEventListener("click", clickButton);
+      $scissors.addEventListener("click", clickButton);
+      $paper.addEventListener("click", clickButton);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>틱택토</title>
+    <style>
+      table {
+        border-collapse: collapse;
+      }
+
+      td {
+        border: 1px solid black;
+        width: 40px;
+        height: 40px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- <table>
+      <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+    </table> -->
+    <script>
+      let turn = "O";
+      const rows = [];
+
+      // [
+      //   [td, td, td],
+      //   [td, td, td],
+      //   [td, td, td],
+      // ]
+
+      const checkWinner = (target) => {
+        const rowIndex = target.parentNode.rowIndex;
+        const cellIndex = target.cellIndex;
+
+        let hasWinner = false;
+
+        if (
+          rows[rowIndex][0].textContent === turn &&
+          rows[rowIndex][1].textContent === turn &&
+          rows[rowIndex][2].textContent === turn
+        ) {
+          hasWinner = true;
+        }
+
+        if (
+          rows[0][cellIndex].textContent === turn &&
+          rows[1][cellIndex].textContent === turn &&
+          rows[2][cellIndex].textContent === turn
+        ) {
+          hasWinner = true;
+        }
+
+        if (
+          rows[0][0].textContent === turn &&
+          rows[1][1].textContent === turn &&
+          rows[2][2].textContent === turn
+        ) {
+          hasWinner = true;
+        }
+
+        if (
+          rows[0][2].textContent === turn &&
+          rows[1][1].textContent === turn &&
+          rows[2][0].textContent === turn
+        ) {
+          hasWinner = true;
+        }
+
+        return hasWinner;
+      };
+
+      const checkWinnerAndDraw = (target) => {
+        // 승자가 있는가?
+        if (checkWinner(target)) {
+          $result.textContent = `${turn}님의 승리!`;
+          $table.removeEventListener("click", callback);
+          return;
+        }
+
+        // 무승부 검사
+        let draw = rows.flat().every((td) => td.textContent);
+        if (draw) {
+          $result.textContent = "무승부!";
+          $table.removeEventListener("click", callback);
+          return;
+        }
+
+        // 턴을 넘긴다
+        turn = turn === "O" ? "X" : "O";
+      };
+
+      const checkConditionAndSelect = (blanks, flag) => {
+        let select;
+        const d1_cond = [rows[0][0], rows[1][1], rows[2][2]];
+        const d2_cond = [rows[0][2], rows[1][1], rows[2][0]];
+
+        outer: for (let i = 0; i < blanks.length; i++) {
+          const ri = blanks[i].parentNode.rowIndex;
+          const ci = blanks[i].cellIndex;
+          const v_cond = Array(3)
+            .fill()
+            .map((v, i) => rows[ri][i]);
+          const h_cond = Array(3)
+            .fill()
+            .map((v, i) => rows[i][ci]);
+
+          const conds = [d1_cond, d2_cond, v_cond, h_cond];
+
+          for (let j = 0; j < conds.length; j++) {
+            if (conds[j].includes(blanks[i])) {
+              let count_O = 0;
+              let count_X = 0;
+
+              conds[j].forEach((cell) => {
+                if (cell.textContent === "O") count_O += 1;
+                else if (cell.textContent === "X") count_X += 1;
+              });
+
+              if (flag === "X" && count_X === 2 && count_O === 0) {
+                select = blanks[i];
+                break outer;
+              }
+
+              if (flag === "O" && count_X === 0 && count_O === 2) {
+                select = blanks[i];
+                break outer;
+              }
+            }
+          }
+        }
+
+        return select;
+      };
+
+      let clickable = true;
+      const callback = (e) => {
+        if (!clickable) return;
+        if (e.target.textContent) return;
+        e.target.textContent = turn;
+        checkWinnerAndDraw(e.target);
+
+        // 컴퓨터의 턴
+        if (turn === "X") {
+          clickable = false;
+          setTimeout(() => {
+            const blanks = rows.flat().filter((v) => !v.textContent);
+            let cpuSelect;
+            if (checkConditionAndSelect(blanks, "X")) {
+              cpuSelect = checkConditionAndSelect(blanks, "X");
+            } else if (checkConditionAndSelect(blanks, "O")) {
+              cpuSelect = checkConditionAndSelect(blanks, "O");
+            } else {
+              cpuSelect = blanks[Math.floor(Math.random() * blanks.length)];
+            }
+            cpuSelect.textContent = turn;
+            checkWinnerAndDraw(cpuSelect);
+            clickable = true;
+          }, 1000);
+        }
+      };
+
+      const { body } = document;
+      const $table = document.createElement("table");
+      const $result = document.createElement("div");
+      for (let i = 0; i < 3; i++) {
+        const $tr = document.createElement("tr");
+        const cells = [];
+        for (let j = 0; j < 3; j++) {
+          const $td = document.createElement("td");
+          cells.push($td);
+          $tr.append($td);
+        }
+        rows.push(cells);
+        $table.append($tr);
+      }
+      body.append($table);
+      body.append($result);
+
+      // event bubbling
+      // $td에서 click event가 발생할 때 $tr...$table... 부모 tag에 event가 전파되는 것을 의미
+      // 전파되는 것을 막으려면 event.stopPropagation()
+      $table.addEventListener("click", callback);
+    </script>
+  </body>
+</html>
