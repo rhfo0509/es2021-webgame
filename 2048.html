@@ -66,12 +66,16 @@
   </head>
   <body>
     <table id="table"></table>
-    <div id="score">0</div>
+    <span id="score">0</span>
+    <button id="rollback">되돌리기</button>
     <script>
       const $table = document.getElementById("table");
       const $score = document.getElementById("score");
+      const $rollback = document.getElementById("rollback");
+
       let score = 0;
       let data = [];
+      const history = [];
 
       // $table -> $fragment -> $tr -> $td
       // fragment에 tr을 넣으면 append를 할 때마다 화면을 다시 그릴 필요 없음
@@ -90,19 +94,28 @@
         $table.append($fragment);
       }
 
-      function check2048() {
-        data.forEach((rowData, i) => {
-          rowData.forEach((cellData, j) => {
-            if (cellData === 2048) {
-              window.removeEventListener("keyup", onKeyUp);
-              window.removeEventListener("mousedown", onMouseDown);
-              window.removeEventListener("mouseup", onMouseUp);
-              setTimeout(() => {
-                alert(`2048을 달성하였습니다. SCORE: ${score}`);
-              }, 0);
-            }
-          });
-        });
+      function checkWinOrLose() {
+        if (data.flat().includes(2048)) {
+          window.removeEventListener("keyup", onKeyUp);
+          window.removeEventListener("mousedown", onMouseDown);
+          window.removeEventListener("mouseup", onMouseUp);
+
+          setTimeout(() => {
+            alert(`2048을 달성하였습니다. SCORE: ${score}`);
+          }, 0);
+
+          return true;
+        } else if (!data.flat().includes(0)) {
+          history.pop();
+
+          setTimeout(() => {
+            alert(`Game Over... SCORE: ${score}`);
+          }, 0);
+
+          return true;
+        }
+
+        return false;
       }
 
       function draw() {
@@ -138,19 +151,13 @@
         const randomCell =
           emptyCells[Math.floor(Math.random() * emptyCells.length)];
 
-        if (!randomCell) {
-          setTimeout(() => {
-            alert(`Game Over... SCORE: ${score}`);
-          }, 0);
-          return;
-        }
         data[randomCell[0]][randomCell[1]] = 2;
 
         console.log($table.children[randomCell[0]].children[randomCell[1]]);
       }
 
-      function moveCells(key) {
-        switch (key) {
+      function moveCells(direction) {
+        switch (direction) {
           case "up": {
             const newData = [[], [], [], []];
 
@@ -159,6 +166,16 @@
                 if (data[j][i]) {
                   newData[i].push(data[j][i]);
                 }
+                // // currentRow를 newData[j]로 설정
+                // if (cellData) {
+                //   const currentRow = newData[j];
+                //   const prevData = currentRow[currentRow.length - 1];
+                //   if (prevData === cellData) {
+                //     currentRow[currentRow.length - 1] *= -2;
+                //   } else {
+                //     newData[i].push(cellData);
+                //   }
+                // }
               });
             });
 
@@ -178,6 +195,7 @@
             data.forEach((rowData, i) => {
               rowData.forEach((cellData, j) => {
                 data[j][i] = newData[i][j] || 0;
+                // data[i][j] = Math.abs(newData[i][j]) || 0;
               });
             });
             break;
@@ -191,6 +209,15 @@
                 if (data[3 - j][i]) {
                   newData[i].push(data[3 - j][i]);
                 }
+                // if (data[3 - i][j]) {
+                //   const currentRow = newData[j];
+                //   const prevData = currentRow[currentRow.length - 1];
+                //   if (prevData === data[3 - i][j]) {
+                //     currentRow[currentRow.length - 1] *= -2;
+                //   } else {
+                //     newData[j].push(data[3 - i][j]);
+                //   }
+                // }
               });
             });
 
@@ -210,6 +237,7 @@
             data.forEach((rowData, i) => {
               rowData.forEach((cellData, j) => {
                 data[j][i] = newData[i][3 - j] || 0;
+                // data[3 - j][i] = Math.abs(newData[i][j]) || 0;
               });
             });
             break;
@@ -222,6 +250,16 @@
                 if (cellData) {
                   newData[i].push(cellData);
                 }
+                // // 다른 방법: -2를 곱하여 연달아 합쳐지는 현상 방지
+                // if (cellData) {
+                //   const currentRow = newData[i];
+                //   const prevData = currentRow[currentRow.length - 1];
+                //   if (prevData === cellData) {
+                //     currentRow[currentRow.length - 1] *= -2;
+                //   } else {
+                //     newData[i].push(cellData);
+                //   }
+                // }
               });
             });
 
@@ -238,9 +276,11 @@
 
             console.log(newData);
 
-            data.forEach((row, ri) => {
-              row.forEach((cell, ci) => {
-                data[ri][ci] = newData[ri][ci] || 0;
+            data.forEach((rowData, i) => {
+              rowData.forEach((cellData, j) => {
+                data[i][j] = newData[i][j] || 0;
+                // // 화면에 그릴 때는 절댓값으로
+                // data[i][j] = Math.abs(newData[i][j]) || 0;
               });
             });
             break;
@@ -253,6 +293,16 @@
                 if (cellData) {
                   newData[i].unshift(cellData);
                 }
+                // //cellData 대신 rowData[3 - j]로 좌우 대칭으로 생각
+                // if (rowData[3 - j]) {
+                //   const currentRow = newData[i];
+                //   const prevData = currentRow[currentRow.length - 1];
+                //   if (prevData === rowData[3 - j]) {
+                //     currentRow[currentRow.length - 1] *= -2;
+                //   } else {
+                //     newData[i].push(rowData[3 - j]);
+                //   }
+                // }
               });
             });
 
@@ -272,6 +322,8 @@
             data.forEach((rowData, i) => {
               rowData.forEach((cellData, j) => {
                 data[i][j] = newData[i][3 - j] || 0;
+                // // 역순으로 newData에 넣었으니 꺼낼 때도 역순으로
+                // data[i][3- j] = Math.abs(newData[i][j]) || 0;
               });
             });
             break;
@@ -281,8 +333,13 @@
             break;
         }
 
-        check2048();
+        if (checkWinOrLose()) return;
+
         put2ToEmptyCell();
+
+        const copyData = JSON.parse(JSON.stringify(data));
+        history.push([copyData, score]);
+
         draw();
       }
 
@@ -298,6 +355,8 @@
         }
 
         put2ToEmptyCell();
+        const initialData = JSON.parse(JSON.stringify(data));
+        history.push([initialData, score]);
         draw();
       }
 
@@ -334,6 +393,13 @@
         }
       }
 
+      function onClick(event) {
+        if (history.length <= 1) return;
+        const prevData = history.pop();
+        [data, score] = history[history.length - 1];
+        draw();
+      }
+
       startGame();
 
       // // dummy data
@@ -347,6 +413,7 @@
       window.addEventListener("keyup", onKeyUp);
       window.addEventListener("mousedown", onMouseDown);
       window.addEventListener("mouseup", onMouseUp);
+      $rollback.addEventListener("click", onClick);
     </script>
   </body>
 </html>
