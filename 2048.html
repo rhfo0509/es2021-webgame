@@ -373,6 +373,27 @@
       }
 
       let startCoord;
+      
+      function onTouchStart(event) {
+        startCoord = [event.touches[0].clientX, event.touches[0].clientY];
+      }
+      
+      function onTouchEnd(event) {
+        const endCoord = [event.changedTouches[0].clientX, event.changedTouches[0].clientY];
+        const diffX = endCoord[0] - startCoord[0];
+        const diffY = endCoord[1] - startCoord[1];
+
+        if (diffY < 0 && Math.abs(diffX) < Math.abs(diffY)) {
+          moveCells("up");
+        } else if (diffY > 0 && Math.abs(diffX) < Math.abs(diffY)) {
+          moveCells("down");
+        } else if (diffX < 0 && Math.abs(diffX) >= Math.abs(diffY)) {
+          moveCells("left");
+        } else if (diffX > 0 && Math.abs(diffX) >= Math.abs(diffY)) {
+          moveCells("right");
+        }
+      }
+      
       function onMouseDown(event) {
         startCoord = [event.clientX, event.clientY];
       }
@@ -413,6 +434,8 @@
       window.addEventListener("keyup", onKeyUp);
       window.addEventListener("mousedown", onMouseDown);
       window.addEventListener("mouseup", onMouseUp);
+      window.addEventListener("touchstart", onTouchStart);
+      window.addEventListener("touchend", onTouchEnd); 
       $rollback.addEventListener("click", onClick);
     </script>
   </body>
